@@ -1,0 +1,68 @@
+\documentclass[border=15pt, multi, tikz]{standalone}
+\usepackage{import}
+\subimport{../layers/}{init}
+\usetikzlibrary{positioning}
+
+\def\ConvColor{rgb:yellow,5;red,2.5;white,5}
+\def\ConvReluColor{rgb:yellow,5;red,5;white,5}
+\def\PoolColor{rgb:red,1;black,0.3}
+\def\FcColor{rgb:blue,5;red,2.5;white,5}
+\def\SoftmaxColor{rgb:magenta,5;black,7}
+
+\begin{document}
+\begin{tikzpicture}
+\tikzstyle{connection}=[ultra thick,every node/.style={sloped,allow upside down},draw=\edgecolor,opacity=0.7]
+
+% Input
+\pic[shift={(0,0,0)}] at (0,0,0) {Box={name=input,caption=Input,%
+        xlabel={{"3"}},zlabel=224,fill={rgb:red,1;green,1;blue,1;white,10},%
+        height=40,width=1,depth=40}};
+
+% Conv Block 1: 7x7, 64 channels
+\pic[shift={(2,0,0)}] at (input-east) {RightBandedBox={name=conv1,caption=Conv1,%
+        xlabel={{"64"}},zlabel=112,fill=\ConvColor,bandfill=\ConvReluColor,%
+        height=35,width=3,depth=35}};
+\pic[shift={(0,0,0)}] at (conv1-east) {Box={name=pool1,%
+        fill=\PoolColor,opacity=0.5,height=28,width=1,depth=28}};
+
+% Conv Block 2: 3x3, 128 channels
+\pic[shift={(1.5,0,0)}] at (pool1-east) {RightBandedBox={name=conv2,caption=Conv2,%
+        xlabel={{"128"}},zlabel=28,fill=\ConvColor,bandfill=\ConvReluColor,%
+        height=25,width=4,depth=25}};
+\pic[shift={(0,0,0)}] at (conv2-east) {Box={name=pool2,%
+        fill=\PoolColor,opacity=0.5,height=20,width=1,depth=20}};
+
+% Conv Block 3: 3x3, 256 channels
+\pic[shift={(1.5,0,0)}] at (pool2-east) {RightBandedBox={name=conv3,caption=Conv3,%
+        xlabel={{"256"}},zlabel=14,fill=\ConvColor,bandfill=\ConvReluColor,%
+        height=18,width=5,depth=18}};
+\pic[shift={(0,0,0)}] at (conv3-east) {Box={name=pool3,%
+        fill=\PoolColor,opacity=0.5,height=14,width=1,depth=14}};
+
+% Conv Block 4: 3x3, 512 channels + Global Avg Pool
+\pic[shift={(1.5,0,0)}] at (pool3-east) {RightBandedBox={name=conv4,caption=Conv4,%
+        xlabel={{"512"}},zlabel=7,fill=\ConvColor,bandfill=\ConvReluColor,%
+        height=12,width=6,depth=12}};
+\pic[shift={(0,0,0)}] at (conv4-east) {Box={name=gap,caption=GAP,%
+        fill=\PoolColor,opacity=0.5,height=5,width=1,depth=5}};
+
+% FC Classifier
+\pic[shift={(1.5,0,0)}] at (gap-east) {Box={name=fc,caption=FC,%
+        xlabel={{"75"}},fill=\FcColor,%
+        height=8,width=2,depth=8}};
+
+% Softmax
+\pic[shift={(1,0,0)}] at (fc-east) {Box={name=softmax,caption=Softmax,%
+        fill=\SoftmaxColor,%
+        height=8,width=1,depth=8}};
+
+% Connections
+\draw [connection] (input-east) -- node {\midarrow} (conv1-west);
+\draw [connection] (pool1-east) -- node {\midarrow} (conv2-west);
+\draw [connection] (pool2-east) -- node {\midarrow} (conv3-west);
+\draw [connection] (pool3-east) -- node {\midarrow} (conv4-west);
+\draw [connection] (gap-east) -- node {\midarrow} (fc-west);
+\draw [connection] (fc-east) -- node {\midarrow} (softmax-west);
+
+\end{tikzpicture}
+\end{document}

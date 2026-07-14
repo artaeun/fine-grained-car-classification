@@ -1,0 +1,26 @@
+% !TEX root = report.tex
+
+\section{Related Work}
+\label{sec:related_work}
+
+\subsection{Fine-Grained Visual Categorization}
+
+FGVC has been studied extensively for birds~\cite{WahCUB2002011}, aircraft, and vehicles. Early approaches relied on part-based models and hand-crafted features, and required explicit part annotations at training time. Current methods use deep CNNs with attention to localize discriminative regions without manual supervision, which improves both accuracy and scalability.
+
+\subsection{The CompCars Dataset}
+
+Yang et al.~\cite{Yang2015} introduced CompCars, a large-scale car dataset for fine-grained categorization and verification, with web-nature and surveillance-nature images annotated hierarchically by make, model, and year. Using OverFeat features with multi-view fusion they reported 82.9\% on make classification and 76.7\% on model classification. That result is the primary baseline here, and the hierarchical annotation is what makes the multi-task formulation of \secref{sec:architectures} possible.
+
+\subsection{Deep CNN Architectures}
+
+ResNet~\cite{He2016} introduced skip connections that allow very deep networks to train without gradient degradation, and the residual formulation scales to hundreds of layers while remaining trainable.
+
+EfficientNet~\cite{Tan2019} uses compound scaling to jointly optimize depth, width, and resolution through neural architecture search. It reaches a better accuracy-to-parameter ratio, with EfficientNet-B0 matching ResNet50 accuracy using 6$\times$ fewer parameters. Both architectures gain substantially from transfer learning on domain-specific tasks with limited data.
+
+\subsection{Attention Mechanisms}
+
+Squeeze-and-Excitation Networks~\cite{Hu2018} apply channel attention: global average pooling followed by fully-connected layers that recalibrate channel-wise feature responses. Modelling channel interdependence explicitly lets a network emphasize informative channels and suppress the rest. For fine-grained classification this is directly useful, since the discriminative evidence sits in narrow visual details such as grilles, headlights, and body contours.
+
+\subsection{Transfer Learning}
+
+Pretraining on ImageNet~\cite{Deng2009} and fine-tuning on the target domain is standard for recognition tasks with limited training data. The learned features transfer across domains and supply both a better initialization and implicit regularization. Differential learning rates (lower for pretrained layers, higher for new classifier heads) preserve the learned representation while the task-specific layers adapt.

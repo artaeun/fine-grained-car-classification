@@ -1,0 +1,20 @@
+% !TEX root = report.tex
+
+\section{Introduction}
+\label{sec:introduction}
+
+Fine-grained visual categorization (FGVC) distinguishes visually similar subcategories inside a broader category, such as separate car makes and models~\cite{Yang2015}. Unlike general object classification, it requires capturing subtle discriminative cues on objects that are nearly identical at the coarse level. Vehicle classification has direct applications in autonomous driving, traffic monitoring, law enforcement, and automated insurance assessment.
+
+The CompCars dataset~\cite{Yang2015} contains over 136,000 web-nature images spanning 163 makes and 1,716 models. The official classification subset used here contains 30,955 images across 75 makes and 431 models. The original work reported 82.9\% make accuracy and 76.7\% model accuracy using OverFeat features with multi-view fusion. That is the reference point used throughout this report.
+
+Five CNN architectures are evaluated on that subset. The findings are:
+
+\begin{itemize}
+    \item A hierarchical multi-task classifier that jointly predicts make (75 classes) and model (431 classes) from a shared backbone reaches 87.55\% top-1 make accuracy and 82.72\% top-1 model accuracy on the test split, exceeding the OverFeat baseline by 4.65 and 6.02 percentage points respectively.
+    \item Transfer learning dominates every other design choice. Pretrained backbones reach 80\% to 88\% test accuracy; the same training recipe from scratch reaches 53.08\%.
+    \item Squeeze-and-Excitation attention~\cite{Hu2018} adds 1.79 percentage points over ResNet50 with label smoothing, at a cost of 0.7M parameters.
+    \item EfficientNet-B0~\cite{Tan2019} reaches 86.95\% with 4.1M parameters, beating a 24.6M-parameter ResNet50~\cite{He2016} while sustaining roughly twice its inference throughput.
+    \item Focal loss~\cite{Lin2017} does not help. Despite a 120:1 class imbalance it loses 1.89 points against plain cross-entropy.
+\end{itemize}
+
+\secref{sec:related_work} reviews related work. \secref{sec:model} covers the dataset and preprocessing. \secref{sec:architectures} details the architectures. \secref{sec:learning_framework} covers losses and optimization. \secref{sec:results} presents the results and \secref{sec:conclusions} concludes.

@@ -1,0 +1,74 @@
+\documentclass[border=15pt, multi, tikz]{standalone}
+\usepackage{import}
+\subimport{../layers/}{init}
+\usetikzlibrary{positioning}
+
+\def\ConvColor{rgb:yellow,5;red,2.5;white,5}
+\def\ConvReluColor{rgb:yellow,5;red,5;white,5}
+\def\PoolColor{rgb:red,1;black,0.3}
+\def\MBConvColor{rgb:green,5;blue,2;white,5}
+\def\SEColor{rgb:orange,5;red,2;white,5}
+\def\FcColor{rgb:blue,5;red,2.5;white,5}
+\def\SoftmaxColor{rgb:magenta,5;black,7}
+
+\begin{document}
+\begin{tikzpicture}
+\tikzstyle{connection}=[ultra thick,every node/.style={sloped,allow upside down},draw=\edgecolor,opacity=0.7]
+
+% Input
+\pic[shift={(0,0,0)}] at (0,0,0) {Box={name=input,caption=Input,%
+        xlabel={{"3"}},zlabel=224,fill={rgb:red,1;green,1;blue,1;white,10},%
+        height=40,width=1,depth=40}};
+
+% Stem Conv
+\pic[shift={(1.5,0,0)}] at (input-east) {RightBandedBox={name=stem,caption=Stem,%
+        xlabel={{"32"}},zlabel=112,fill=\ConvColor,bandfill=\ConvReluColor,%
+        height=35,width=2,depth=35}};
+
+% MBConv1
+\pic[shift={(1.2,0,0)}] at (stem-east) {RightBandedBox={name=mb1,caption=MBConv1,%
+        xlabel={{"16"}},zlabel=112,fill=\MBConvColor,bandfill=\SEColor,%
+        height=32,width=2,depth=32}};
+
+% MBConv2-3
+\pic[shift={(1.2,0,0)}] at (mb1-east) {RightBandedBox={name=mb2,caption=MBConv2,%
+        xlabel={{"24","24"}},zlabel=56,fill=\MBConvColor,bandfill=\SEColor,%
+        height=26,width={2,2},depth=26}};
+
+% MBConv4-5
+\pic[shift={(1.2,0,0)}] at (mb2-east) {RightBandedBox={name=mb3,caption=MBConv3,%
+        xlabel={{"40","40"}},zlabel=28,fill=\MBConvColor,bandfill=\SEColor,%
+        height=22,width={3,3},depth=22}};
+
+% MBConv6-8
+\pic[shift={(1.2,0,0)}] at (mb3-east) {RightBandedBox={name=mb4,caption=MBConv4,%
+        xlabel={{"80"}},zlabel=14,fill=\MBConvColor,bandfill=\SEColor,%
+        height=18,width=4,depth=18}};
+
+% MBConv9-15
+\pic[shift={(1.2,0,0)}] at (mb4-east) {RightBandedBox={name=mb5,caption=MBConv5-7,%
+        xlabel={{"192","320"}},zlabel=7,fill=\MBConvColor,bandfill=\SEColor,%
+        height=12,width={5,4},depth=12}};
+
+% Head Conv + GAP
+\pic[shift={(1.2,0,0)}] at (mb5-east) {RightBandedBox={name=head,caption=Head,%
+        xlabel={{"1280"}},fill=\ConvColor,bandfill=\PoolColor,%
+        height=8,width=6,depth=8}};
+
+% FC Classifier
+\pic[shift={(1.2,0,0)}] at (head-east) {Box={name=fc,caption=FC 75,%
+        fill=\SoftmaxColor,%
+        height=8,width=2,depth=8}};
+
+% Connections
+\draw [connection] (input-east) -- node {\midarrow} (stem-west);
+\draw [connection] (stem-east) -- node {\midarrow} (mb1-west);
+\draw [connection] (mb1-east) -- node {\midarrow} (mb2-west);
+\draw [connection] (mb2-east) -- node {\midarrow} (mb3-west);
+\draw [connection] (mb3-east) -- node {\midarrow} (mb4-west);
+\draw [connection] (mb4-east) -- node {\midarrow} (mb5-west);
+\draw [connection] (mb5-east) -- node {\midarrow} (head-west);
+\draw [connection] (head-east) -- node {\midarrow} (fc-west);
+
+\end{tikzpicture}
+\end{document}

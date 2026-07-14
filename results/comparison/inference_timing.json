@@ -1,0 +1,65 @@
+{
+  "device": "cuda",
+  "gpu_name": "NVIDIA GeForce RTX 3060",
+  "batch_size": 32,
+  "num_test_samples": 14939,
+  "measured_at": "2026-02-28 20:53:00",
+  "models": {
+    "simplecnn_label_smoothing": {
+      "display_name": "SimpleCNN",
+      "parameters": 1599051,
+      "total_time_sec": 8.617111600062344,
+      "avg_batch_time_ms": 18.452059100775898,
+      "avg_sample_time_ms": 0.5768198406896274,
+      "throughput_images_per_sec": 1733.643556373567
+    },
+    "efficientnet_label_smoothing": {
+      "display_name": "EfficientNet-B0",
+      "parameters": 4103623,
+      "total_time_sec": 17.695208300079685,
+      "avg_batch_time_ms": 37.891238329935085,
+      "avg_sample_time_ms": 1.1844975098788195,
+      "throughput_images_per_sec": 844.2398499447293
+    },
+    "resnet50_ce": {
+      "display_name": "ResNet50 (CE)",
+      "parameters": 24595595,
+      "total_time_sec": 36.34692480007652,
+      "avg_batch_time_ms": 77.83067409009962,
+      "avg_sample_time_ms": 2.433022611960407,
+      "throughput_images_per_sec": 411.01138768054864
+    },
+    "resnet50_focal": {
+      "display_name": "ResNet50 (Focal)",
+      "parameters": 24595595,
+      "total_time_sec": 36.42617640012759,
+      "avg_batch_time_ms": 78.00037773046593,
+      "avg_sample_time_ms": 2.4383276256862967,
+      "throughput_images_per_sec": 410.1171595915204
+    },
+    "resnet50_label_smoothing": {
+      "display_name": "ResNet50 (LS)",
+      "parameters": 24595595,
+      "total_time_sec": 36.78557180002099,
+      "avg_batch_time_ms": 78.7699610278822,
+      "avg_sample_time_ms": 2.462385152956757,
+      "throughput_images_per_sec": 406.1103108907356
+    },
+    "resnet50_se_label_smoothing": {
+      "display_name": "ResNet50-SE",
+      "parameters": 24362107,
+      "total_time_sec": 37.96227369981352,
+      "avg_batch_time_ms": 81.2896653100932,
+      "avg_sample_time_ms": 2.5411522658687677,
+      "throughput_images_per_sec": 393.52226682021376
+    },
+    "hierarchical": {
+      "display_name": "Hierarchical",
+      "parameters": 25865786,
+      "total_time_sec": 35.591124200087506,
+      "avg_batch_time_ms": 76.21225738776768,
+      "avg_sample_time_ms": 2.3824301626673474,
+      "throughput_images_per_sec": 419.73948100136914
+    }
+  }
+}

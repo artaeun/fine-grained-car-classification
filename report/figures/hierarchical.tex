@@ -1,0 +1,60 @@
+\documentclass[border=15pt, multi, tikz]{standalone}
+\usepackage{import}
+\subimport{../layers/}{init}
+\usetikzlibrary{positioning}
+
+\def\ConvColor{rgb:yellow,5;red,2.5;white,5}
+\def\ConvReluColor{rgb:yellow,5;red,5;white,5}
+\def\PoolColor{rgb:red,1;black,0.3}
+\def\ResColor{rgb:blue,2;green,5;white,5}
+\def\MakeColor{rgb:green,5;blue,2;white,5}
+\def\ModelColor{rgb:cyan,5;blue,3;white,5}
+\def\SoftmaxColor{rgb:magenta,5;black,7}
+
+\begin{document}
+\begin{tikzpicture}
+\tikzstyle{connection}=[ultra thick,every node/.style={sloped,allow upside down},draw=\edgecolor,opacity=0.7]
+
+% Input
+\pic[shift={(0,0,0)}] at (0,0,0) {Box={name=input,caption=Input,%
+        xlabel={{"3"}},zlabel=224,fill={rgb:red,1;green,1;blue,1;white,10},%
+        height=40,width=1,depth=40}};
+
+% Shared ResNet50 Backbone
+\pic[shift={(1.5,0,0)}] at (input-east) {RightBandedBox={name=stem,caption=Stem,%
+        xlabel={{"64"}},fill=\ConvColor,bandfill=\ConvReluColor,%
+        height=32,width=2,depth=32}};
+
+\pic[shift={(1.2,0,0)}] at (stem-east) {RightBandedBox={name=layer12,caption=Layer1-2,%
+        xlabel={{"256","512"}},fill=\ResColor,bandfill=\ConvReluColor,%
+        height=26,width={4,5},depth=26}};
+
+\pic[shift={(1.2,0,0)}] at (layer12-east) {RightBandedBox={name=layer34,caption=Layer3-4,%
+        xlabel={{"1024","2048"}},fill=\ResColor,bandfill=\ConvReluColor,%
+        height=16,width={6,7},depth=16}};
+
+% GAP
+\pic[shift={(0,0,0)}] at (layer34-east) {Box={name=gap,caption=GAP,%
+        fill=\PoolColor,opacity=0.5,height=6,width=1,depth=6}};
+
+% Make Head (upper branch)
+\pic[shift={(2,2,0)}] at (gap-east) {RightBandedBox={name=makehead,caption=Make Head,%
+        xlabel={{"512","75"}},fill=\MakeColor,bandfill=\SoftmaxColor,%
+        height=10,width={3,2},depth=10}};
+
+% Model Head (lower branch)
+\pic[shift={(2,-2,0)}] at (gap-east) {RightBandedBox={name=modelhead,caption=Model Head,%
+        xlabel={{"512","431"}},fill=\ModelColor,bandfill=\SoftmaxColor,%
+        height=10,width={3,3},depth=10}};
+
+% Connections
+\draw [connection] (input-east) -- node {\midarrow} (stem-west);
+\draw [connection] (stem-east) -- node {\midarrow} (layer12-west);
+\draw [connection] (layer12-east) -- node {\midarrow} (layer34-west);
+
+% Branch connections
+\draw [connection] (gap-east) -- ++(0.5,0) |- node[pos=0.3] {\midarrow} (makehead-west);
+\draw [connection] (gap-east) -- ++(0.5,0) |- node[pos=0.3] {\midarrow} (modelhead-west);
+
+\end{tikzpicture}
+\end{document}

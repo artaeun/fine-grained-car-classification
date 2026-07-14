@@ -1,0 +1,41 @@
+\begin{thebibliography}{1}
+
+\bibitem{Yang2015}
+L.~Yang, P.~Luo, C.~C. Loy, and X.~Tang, ``{A Large-Scale Car Dataset for
+  Fine-Grained Categorization and Verification},'' in {\em {IEEE Conference on
+  Computer Vision and Pattern Recognition (CVPR)}}, ({Boston, MA, USA}),
+  pp.~3973--3981, June 2015.
+
+\bibitem{Hu2018}
+J.~Hu, L.~Shen, and G.~Sun, ``{Squeeze-and-Excitation Networks},'' in {\em
+  {IEEE Conference on Computer Vision and Pattern Recognition (CVPR)}}, ({Salt
+  Lake City, UT, USA}), pp.~7132--7141, June 2018.
+
+\bibitem{Tan2019}
+M.~Tan and Q.~V. Le, ``{EfficientNet: Rethinking Model Scaling for
+  Convolutional Neural Networks},'' in {\em {International Conference on
+  Machine Learning (ICML)}}, ({Long Beach, CA, USA}), pp.~6105--6114, June
+  2019.
+
+\bibitem{He2016}
+K.~He, X.~Zhang, S.~Ren, and J.~Sun, ``{Deep Residual Learning for Image
+  Recognition},'' in {\em {IEEE Conference on Computer Vision and Pattern
+  Recognition (CVPR)}}, ({Las Vegas, NV, USA}), pp.~770--778, June 2016.
+
+\bibitem{Lin2017}
+T.-Y. Lin, P.~Goyal, R.~Girshick, K.~He, and P.~Dollar, ``{Focal Loss for Dense
+  Object Detection},'' in {\em {IEEE International Conference on Computer
+  Vision (ICCV)}}, ({Venice, Italy}), pp.~2980--2988, Oct. 2017.
+
+\bibitem{WahCUB2002011}
+C.~Wah, S.~Branson, P.~Welinder, P.~Perona, and S.~Belongie, ``{The
+  Caltech-UCSD Birds-200-2011 Dataset},'' Tech. Rep. CNS-TR-2011-001,
+  California Institute of Technology, 2011.
+
+\bibitem{Deng2009}
+J.~Deng, W.~Dong, R.~Socher, L.-J. Li, K.~Li, and L.~Fei-Fei, ``{ImageNet: A
+  Large-Scale Hierarchical Image Database},'' in {\em {IEEE Conference on
+  Computer Vision and Pattern Recognition (CVPR)}}, ({Miami, FL, USA}),
+  pp.~248--255, June 2009.
+
+\end{thebibliography}

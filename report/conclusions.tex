@@ -1,0 +1,35 @@
+% !TEX root = report.tex
+
+\section{Conclusion}
+\label{sec:conclusions}
+
+The hierarchical multi-task classifier is the best model on this benchmark: 87.55\% top-1 make accuracy and 82.72\% top-1 model accuracy on the CompCars test split, beating the OverFeat baseline by 4.65 and 6.02 percentage points. It also generalizes best, with the lowest train-to-validation gap of any model tested, and its second head costs nothing at inference.
+
+\subsection{Findings}
+
+\begin{itemize}
+    \item \textbf{Transfer learning dominates.} Pretrained backbones beat the same recipe from scratch by 27 to 34 points. No other choice in this study comes within an order of magnitude of that effect.
+    \item \textbf{Multi-task learning is a regularizer.} Adding the 431-class model head to a ResNet50 backbone raises make accuracy by 4.86 points over the single-task equivalent and cuts the train-to-validation gap from 2.62\% to 1.18\%.
+    \item \textbf{Attention pays for itself.} SE blocks add 1.79 points for 0.7M parameters and 3.5\% throughput.
+    \item \textbf{Small models win on cost.} EfficientNet-B0 gives up 0.6 points to the best model while using 6$\times$ fewer parameters and running at twice the throughput of any ResNet50 variant.
+    \item \textbf{Focal loss does not fix this imbalance.} It loses 1.89 points to cross-entropy despite a 120:1 make imbalance. Class imbalance is not the binding constraint here.
+    \item \textbf{Validation accuracy is not test accuracy.} Every model loses 10 to 22 points across that boundary, because the validation split is a random slice of the training images while the official test split is not. Validation is usable for model selection and useless as a performance estimate.
+\end{itemize}
+
+\subsection{Where the Errors Are}
+
+The residual errors are not spread evenly. They concentrate on rare classes (recall, not precision, is the failure mode) and on makes that genuinely share sheet metal: Skoda predicted as Volkswagen, Chinese makes of the era predicted as Volkswagen, Brabus predicted as Benz. Some of that headroom is not recoverable from a single image, since a Brabus is a Mercedes body. The recoverable part sits in the rare classes, where the models are accurate but under-confident.
+
+\subsection{Deployment Notes}
+
+Pick by constraint. For maximum accuracy, and for a system that needs both make and model, the hierarchical model at 420 images per second. For an edge or high-throughput setting, EfficientNet-B0 at 844 images per second and 4.1M parameters, for 0.6 points less accuracy. Plain ResNet50 is not on the Pareto front in either direction.
+
+\subsection{Open Directions}
+
+\begin{itemize}
+    \item Test-time augmentation and ensembling, to attack the variance implied by the val-test gap.
+    \item Class-balanced sampling or thresholding targeted at recall on rare makes, which is where the macro F1 is actually lost.
+    \item Part-based or spatial attention to localize discriminative regions explicitly, since the current channel attention is position invariant.
+    \item Extension to the full 1,716-model split and to the car verification task.
+    \item A validation split drawn from held-out photo sources rather than a random slice, which would give an honest early-stopping signal.
+\end{itemize}
