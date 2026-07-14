@@ -1,4 +1,4 @@
-# Fine-Grained Car Make Classification
+![Fine-Grained Car Make Classification. 87.55% top-1 on CompCars, 4.65 points over the OverFeat baseline.](assets/banner.svg)
 
 > **A hierarchical dual-head ResNet50 reaches 87.55% top-1 make accuracy on the CompCars test split, 4.65 points above the OverFeat baseline of Yang et al.**
 
