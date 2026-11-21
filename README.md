@@ -1,6 +1,13 @@
 ![Fine-Grained Car Make Classification. 87.55% top-1 on CompCars, 4.65 points over the OverFeat baseline.](assets/banner.svg)
 
-> **A hierarchical dual-head ResNet50 reaches 87.55% top-1 make accuracy on the CompCars test split, 4.65 points above the OverFeat baseline of Yang et al.**
+Classifies 75 car makes from one photo.
+
+| Result | Value |
+| --- | --- |
+| Top-1 accuracy, 75 makes (CompCars) | 87.55 % |
+| Published baseline (OverFeat) | 82.90 % |
+| Images | 30,955 |
+| Architectures compared | 5 |
 
 [![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=flat&logo=python&logoColor=white)](https://www.python.org)
 [![PyTorch](https://img.shields.io/badge/PyTorch-EE4C2C?style=flat&logo=pytorch&logoColor=white)](https://pytorch.org)
@@ -18,6 +25,18 @@
 ![Top-1 and top-5 test accuracy for all seven trained models](assets/accuracy_comparison.png)
 
 *Top-1 and top-5 make accuracy on the 14,939-image CompCars test split. The hierarchical model leads at 87.55% top-1.*
+
+## Run it
+
+These three commands need no dataset and no GPU. They read the committed predictions of the best model and print the ten makes with the lowest F1.
+
+```bash
+git clone https://github.com/artaeun/fine-grained-car-classification && cd fine-grained-car-classification
+pip install scikit-learn
+python src/worst_classes.py hierarchical 10
+```
+
+The full comparison of the seven runs is `notebooks/04_analysis.ipynb`, which also reads only `results/`. Training needs the dataset and a GPU, as [Reproduce](#reproduce) explains.
 
 ## Abstract
 
@@ -84,6 +103,29 @@ Validation and test are different splits and the difference is large, so both ar
 
 On the fine-grained 431-class task the hierarchical model reaches 82.72% top-1, 91.80% top-5, macro F1 0.8187, against the 76.7% of the OverFeat baseline.
 
+### The ten weakest makes
+
+The hierarchical model's ten make classes with the lowest test F1, from [`results/hierarchical/worst_classes.md`](results/hierarchical/worst_classes.md). Names are spelled as CompCars spells them.
+
+| Make | Test images | Precision | Recall | F1 |
+| --- | --- | --- | --- | --- |
+| Brabus | 18 | 1.00 | 0.39 | 0.56 |
+| Mitsubishi | 278 | 0.56 | 0.93 | 0.70 |
+| Wealeak | 10 | 0.86 | 0.60 | 0.71 |
+| Qoros | 16 | 1.00 | 0.56 | 0.72 |
+| Chrysler | 43 | 1.00 | 0.60 | 0.75 |
+| Opel | 80 | 0.69 | 0.84 | 0.76 |
+| Jonway | 9 | 0.67 | 0.89 | 0.76 |
+| Chrey | 283 | 0.66 | 0.93 | 0.77 |
+| Lamorghini | 57 | 0.97 | 0.65 | 0.78 |
+| GAC | 9 | 0.73 | 0.89 | 0.80 |
+
+Five of the ten have fewer than 20 test images. Mitsubishi and Chrey are the two large classes in the list, and both fail on precision. The model finds almost all of their cars, and it also puts their name on cars of other makes.
+
+![Normalised confusion matrix of the hierarchical model and its most frequent confusions](results/hierarchical/figures/confusion_matrix.png)
+
+*Confusion matrix of the hierarchical model on the test split, normalised by true class, with the most frequent confusion pairs on the right.*
+
 ![Test top-1 accuracy against parameter count](assets/accuracy_vs_parameters.png)
 
 *EfficientNet-B0 sits far to the left of the ResNet family at nearly the same accuracy. That is the deployment story in one plot.*
@@ -111,6 +153,13 @@ On the fine-grained 431-class task the hierarchical model reaches 82.72% top-1, 
 - Macro recall is where the rare makes hide. 9 of the 75 make classes score below 0.80 F1 on the hierarchical model, and 144 of the 431 model classes do. One make reaches precision 1.00 with recall 0.39, meaning the model is right whenever it commits and it almost never commits.
 - Single seed per configuration. No confidence intervals, so a 0.60 point difference between two models should not be over-read.
 - No test-time augmentation, no ensembling, no multi-view fusion, all of which the OverFeat baseline used.
+
+## Next steps
+
+- Export the hierarchical model to ONNX and measure its time per image on a CPU with ONNX Runtime. A production-line PC needs that figure.
+- Build a validation split from held-out photo sources, for early stopping that follows the test distribution.
+- Train each configuration with three seeds and report the spread.
+- Add a consistency term between the make head and the model head, since the model head names the exact car on 16.77% of the images where the make head is wrong.
 
 ## Reproduce
 
