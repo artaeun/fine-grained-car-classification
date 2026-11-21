@@ -26,37 +26,25 @@ Classifies 75 car makes from one photo.
 
 *Top-1 and top-5 make accuracy on the 14,939-image CompCars test split. The hierarchical model leads at 87.55% top-1.*
 
-## Run it
-
-These three commands need no dataset and no GPU. They read the committed predictions of the best model and print the ten makes with the lowest F1.
-
-```bash
-git clone https://github.com/artaeun/fine-grained-car-classification && cd fine-grained-car-classification
-pip install scikit-learn
-python src/worst_classes.py hierarchical 10
-```
-
-The full comparison of the seven runs is `notebooks/04_analysis.ipynb`, which also reads only `results/`. Training needs the dataset and a GPU, as [Reproduce](#reproduce) explains.
-
 ## Abstract
 
-Five convolutional architectures were trained on the CompCars classification split (30,955 images, 75 makes, 431 models) and evaluated on the official test split: a from-scratch baseline CNN, ResNet50, EfficientNet-B0, ResNet50 with Squeeze-and-Excitation attention, and a hierarchical multi-task network with two heads on one shared ResNet50 backbone. Seven training runs cover four loss functions across those architectures. The hierarchical network is the best model, at 87.55% top-1 make accuracy and 82.72% top-1 model accuracy on test, against the 82.9% and 76.7% reported by Yang et al. with OverFeat features and multi-view fusion. Its second head costs nothing at inference (420 img/s, against 411 img/s for the same backbone with one head). ImageNet pretraining dominates every other design choice: pretrained backbones land between 80% and 88% test accuracy, the identical recipe from scratch reaches 53.08%.
+Five convolutional architectures were trained on the CompCars classification split (30,955 images, 75 makes, 431 models) and evaluated on the official test split: a from-scratch baseline CNN, ResNet50, EfficientNet-B0, ResNet50 with Squeeze-and-Excitation attention, and a hierarchical multi-task network with two heads on one shared ResNet50 backbone. Seven training runs cover four loss functions across those architectures. The hierarchical network is the best model, at 87.55% top-1 make accuracy and 82.72% top-1 model accuracy on test, against the 82.9% and 76.7% reported by Yang et al. with OverFeat features and multi-view fusion. Its second head does not slow inference (420 img/s, against 411 img/s for the same backbone with one head). ImageNet pretraining has a larger effect than any other design choice. Pretrained backbones reach between 80% and 88% test accuracy, and the identical recipe from scratch reaches 53.08%.
 
 ## Problem
 
-Telling a Skoda from a Volkswagen in a photograph. They share platforms, proportions and styling language, and the difference lives in a grille, a badge and a headlight cluster, all of which have to survive viewpoint, lighting and background clutter.
+Telling a Skoda from a Volkswagen in a photograph. The two makes share platforms, proportions and styling language. The difference is in a grille, a badge and a headlight cluster, and each of them has to stay recognisable when viewpoint, lighting and background change.
 
-This is fine-grained visual categorisation: many classes, low inter-class variance, high intra-class variance. CompCars gives 75 makes and 431 models over 30,955 images, split 16,016 train and 14,939 test. Two properties make it harder than the class count suggests. The make labels are imbalanced 120:1, from 1,201 images for the largest class down to 10 for the smallest. And the official test split is not a random slice of the training data, so a model that memorises photo sources scores beautifully on a random validation split and then collapses on test. Every model trained here lost between 10.80 and 21.70 accuracy points across that boundary.
+This is fine-grained visual categorisation: many classes, low inter-class variance, high intra-class variance. CompCars gives 75 makes and 431 models over 30,955 images, split 16,016 train and 14,939 test. Two properties make it harder than the class count suggests. The make labels are imbalanced 120:1, from 1,201 images for the largest class down to 10 for the smallest. The official test split is also not a random slice of the training data, so a model that memorises photo sources scores high on a random validation split and much lower on test. Every model trained here lost between 10.80 and 21.70 accuracy points across that boundary.
 
 ## Motivation
 
-Vehicle make and model recognition is the front end of automated tolling, parking enforcement, traffic analytics, stolen-vehicle detection and insurance claim triage. Each of those runs under a throughput or cost budget, so the useful question is where a model sits on the accuracy-cost front. Inference throughput was measured for all seven runs on the same GPU and the same test set, so the trade is visible rather than assumed.
+Vehicle make and model recognition is the front end of automated tolling, parking enforcement, traffic analytics, stolen-vehicle detection and insurance claim triage. Each of those runs under a throughput or cost budget, so the useful question is where a model sits on the accuracy-cost front. Inference throughput was measured for all seven runs on the same GPU and the same test set, so the accuracy and the throughput of each run can be compared directly.
 
-There is a methodological point that carries past cars. On any benchmark whose test split is drawn from different sources than its training split, a random validation split is a model-selection signal and nothing more. Reporting it as a performance estimate, as is common, overstates results here by 10 to 22 points.
+One methodological result holds beyond cars. On any benchmark whose test split is drawn from different sources than its training split, a random validation split is only a model-selection signal. Reporting it as a performance estimate, as is common, overstates results here by 10 to 22 points.
 
 ## Approach
 
-Five architectures, one training recipe.
+The five architectures share one training recipe.
 
 | Model | Backbone | Head | Params |
 |---|---|---|---|
@@ -66,7 +54,7 @@ Five architectures, one training recipe.
 | ResNet50-SE | ImageNet-pretrained, SE block after each stage (reduction 16) | 2048 to 75 | 24.36M |
 | Hierarchical | ImageNet-pretrained ResNet50, shared | 2048 to 512 to 75 (make) and 2048 to 512 to 431 (model) | 25.87M |
 
-Transfer learning is the backbone of four of the five. The SE block recalibrates channel responses after each residual stage, a cheap global-context mechanism that adds 0.7M parameters and 1.79 points over plain ResNet50.
+Four of the five use transfer learning. The SE block recalibrates channel responses after each residual stage, a cheap global-context mechanism that adds 0.7M parameters and 1.79 points over plain ResNet50.
 
 The hierarchical model exploits the annotation hierarchy that CompCars already ships. Both heads read the same 2048-dimensional pooled feature, one predicting the 75 makes and one the 431 models, so the 431-class task acts as an auxiliary supervision signal for the coarse task. From `src/models.py`:
 
@@ -99,36 +87,13 @@ Test split, make classification, 75 classes, 14,939 images. Precision, recall an
 | **Hierarchical** | 25.87 | **87.55** | **94.77** | 0.9096 | 0.8486 | **0.8702** | 98.94 | 420 |
 | OverFeat (Yang et al., 2015) | | 82.90 | | | | | | |
 
-Validation and test are different splits and the difference is large, so both are given. Validation is a 10% stratified slice of the training images, drawn from the same photo sources as training. Test is the official CompCars split. The hierarchical model scores 98.94% make and 95.51% model on validation, and 87.55% make and 82.72% model on test. The validation figure is useful for early stopping and worthless as a performance claim, and an earlier draft of the report conflated the two.
+Validation and test are different splits and the difference is large, so both are given. Validation is a 10% stratified slice of the training images, drawn from the same photo sources as training. Test is the official CompCars split. The hierarchical model scores 98.94% make and 95.51% model on validation, and 87.55% make and 82.72% model on test. The validation figure serves early stopping and says little about test performance. An earlier draft of the report conflated the two.
 
 On the fine-grained 431-class task the hierarchical model reaches 82.72% top-1, 91.80% top-5, macro F1 0.8187, against the 76.7% of the OverFeat baseline.
 
-### The ten weakest makes
-
-The hierarchical model's ten make classes with the lowest test F1, from [`results/hierarchical/worst_classes.md`](results/hierarchical/worst_classes.md). Names are spelled as CompCars spells them.
-
-| Make | Test images | Precision | Recall | F1 |
-| --- | --- | --- | --- | --- |
-| Brabus | 18 | 1.00 | 0.39 | 0.56 |
-| Mitsubishi | 278 | 0.56 | 0.93 | 0.70 |
-| Wealeak | 10 | 0.86 | 0.60 | 0.71 |
-| Qoros | 16 | 1.00 | 0.56 | 0.72 |
-| Chrysler | 43 | 1.00 | 0.60 | 0.75 |
-| Opel | 80 | 0.69 | 0.84 | 0.76 |
-| Jonway | 9 | 0.67 | 0.89 | 0.76 |
-| Chrey | 283 | 0.66 | 0.93 | 0.77 |
-| Lamorghini | 57 | 0.97 | 0.65 | 0.78 |
-| GAC | 9 | 0.73 | 0.89 | 0.80 |
-
-Five of the ten have fewer than 20 test images. Mitsubishi and Chrey are the two large classes in the list, and both fail on precision. The model finds almost all of their cars, and it also puts their name on cars of other makes.
-
-![Normalised confusion matrix of the hierarchical model and its most frequent confusions](results/hierarchical/figures/confusion_matrix.png)
-
-*Confusion matrix of the hierarchical model on the test split, normalised by true class, with the most frequent confusion pairs on the right.*
-
 ![Test top-1 accuracy against parameter count](assets/accuracy_vs_parameters.png)
 
-*EfficientNet-B0 sits far to the left of the ResNet family at nearly the same accuracy. That is the deployment story in one plot.*
+*EfficientNet-B0 sits far to the left of the ResNet family at nearly the same accuracy. For deployment, this is the result to read from the plot.*
 
 ![Validation accuracy across epochs for all models](assets/validation_accuracy_overlay.png)
 
@@ -136,30 +101,23 @@ Five of the ten have fewer than 20 test images. Mitsubishi and Chrey are the two
 
 ## Discussion
 
-**Parameter efficiency beats scale here.** EfficientNet-B0 carries 4.10M parameters, ResNet50 carries 24.60M, and the small model wins by 4.67 points of top-1 while running at 844 img/s against 411 img/s. Plain ResNet50 is on nobody's Pareto front. The two models worth shipping are the hierarchical network when accuracy is the constraint and EfficientNet-B0 when throughput or memory is, at a cost of 0.60 points.
+**Parameter efficiency beats scale here.** EfficientNet-B0 carries 4.10M parameters, ResNet50 carries 24.60M, and the small model wins by 4.67 points of top-1 while running at 844 img/s against 411 img/s. Plain ResNet50 is not on the Pareto front. The two models worth shipping are the hierarchical network when accuracy is the constraint and EfficientNet-B0 when throughput or memory is, at a cost of 0.60 points.
 
-**The auxiliary head is a regulariser and it is free.** Adding the 431-class head lifts *make* accuracy by 4.86 points over the single-task ResNet50 with the same loss, and drops the train-to-validation gap over the last ten epochs from 2.62 to 1.18 points, the lowest of any run. Throughput is unchanged, because both heads are two linear layers over a pooled vector that the backbone already computed. At deployment the fine head can simply be dropped.
+**The auxiliary head regularises the network and leaves throughput unchanged.** Adding the 431-class head lifts *make* accuracy by 4.86 points over the single-task ResNet50 with the same loss, and drops the train-to-validation gap over the last ten epochs from 2.62 to 1.18 points, the lowest of any run. Throughput is unchanged, because both heads are two linear layers over a pooled vector that the backbone already computed. At deployment the fine head can be dropped.
 
-**Focal loss did not help.** It lost 1.89 points to plain cross-entropy despite the 120:1 imbalance it was designed for. Class discriminability, not class frequency, is the binding constraint on this dataset.
+**Focal loss did not help.** It lost 1.89 points to plain cross-entropy despite the 120:1 imbalance it was designed for. What limits accuracy on this dataset is how alike the classes look, and class frequency matters less.
 
-**Volkswagen is the sink.** In the hierarchical model's ten worst confusion pairs, Volkswagen is the predicted label in seven. 8.8% of Skoda test images are called Volkswagen, and EfficientNet-B0 makes that same error on 15.9% of them. Skoda is a Volkswagen Group marque and Volkswagen is the largest class in the training data, so the prior and the pixels point the same way. Some of the error is unreachable from one image: EfficientNet-B0 calls 66.7% of Brabus images "Benz", and a Brabus is a Mercedes body with a tuner's badge on it.
+**Most of the worst confusions end on Volkswagen.** In the hierarchical model's ten worst confusion pairs, Volkswagen is the predicted label in seven. 8.8% of Skoda test images are called Volkswagen, and EfficientNet-B0 makes that same error on 15.9% of them. Skoda is a Volkswagen Group marque and Volkswagen is the largest class in the training data, so the class prior and the visual similarity both favour Volkswagen. Some of the error is unreachable from one image: EfficientNet-B0 calls 66.7% of Brabus images "Benz", and a Brabus is a Mercedes body with a tuner's badge on it.
 
-**The two heads fail together, but only mostly.** Of the images where the model head is wrong, 59.95% also have the make wrong. Of the images where the make head is wrong, the model head still names the exact car 16.77% of the time, which means the fine head carries information the coarse head is throwing away and a consistency constraint between them is unexploited work.
+**The two heads fail on the same images in most cases.** Of the images where the model head is wrong, 59.95% also have the make wrong. Of the images where the make head is wrong, the model head still names the exact car 16.77% of the time. The fine head therefore carries information that the coarse head does not use, and a consistency constraint between the two heads was not tried.
 
 ## Limitations
 
 - The CompCars images are not in this repository and cannot be, because CUHK requires a signed release agreement. The trained checkpoints (`.pth`) are not shipped either, being far too large for GitHub.
-- The validation-to-test gap is 10.80 to 16.30 points for the pretrained models and 21.70 for SimpleCNN. Early stopping therefore ran on a signal that does not track the quantity anyone cares about. A validation split drawn from held-out photo sources would fix this and was not built.
-- Macro recall is where the rare makes hide. 9 of the 75 make classes score below 0.80 F1 on the hierarchical model, and 144 of the 431 model classes do. One make reaches precision 1.00 with recall 0.39, meaning the model is right whenever it commits and it almost never commits.
+- The validation-to-test gap is 10.80 to 16.30 points for the pretrained models and 21.70 for SimpleCNN. Early stopping therefore ran on a signal that does not track test accuracy. A validation split drawn from held-out photo sources would fix this and was not built.
+- The rare makes pull the macro recall down. 9 of the 75 make classes score below 0.80 F1 on the hierarchical model, and 144 of the 431 model classes do. One make reaches precision 1.00 with recall 0.39, so every prediction of that make is correct and the model misses most of its images.
 - Single seed per configuration. No confidence intervals, so a 0.60 point difference between two models should not be over-read.
 - No test-time augmentation, no ensembling, no multi-view fusion, all of which the OverFeat baseline used.
-
-## Next steps
-
-- Export the hierarchical model to ONNX and measure its time per image on a CPU with ONNX Runtime. A production-line PC needs that figure.
-- Build a validation split from held-out photo sources, for early stopping that follows the test distribution.
-- Train each configuration with three seeds and report the spread.
-- Add a consistency term between the make head and the model head, since the model head names the exact car on 16.77% of the images where the make head is wrong.
 
 ## Reproduce
 
